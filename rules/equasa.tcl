@@ -5,12 +5,39 @@ proc fail {msg} {
 	error "fail: $msg"
 }
 
+# what types we know?
+array set _known_types {
+	Ref [list "reference to other fact"]
+	Int [list "integer, 64 bit"]
+	Double [list "double precision floating point"]
+}
+proc _known_type {type} {
+	global _known_types
+	if {[info exists _known_types($type)]} {
+		return
+	}
+	fail "unknown type ($type)"
+}
+
 # Creates a constructor command.
+# Constructors should have types in constr command.
+array set _constructors {}
 proc constr {name args} {
+	global _constructors
+	if {[info exists _constructors($name)]} {
+		fail "constructor redefined ($name)"
+	}
+	set _constructors($name) $args
 	if {![string is upper [string index $name 0]]} {
 		fail "Constructor should start from upper case char ($name)"
 	}
-	proc name $args "return \[list --C $name $args]"
+	set vi 1
+	set vars [list ]
+	foreach ty $args {
+		_known_type
+		lappend vars v$vi
+	}
+	proc $name $vars "return \[list --C $name $vars]"
 }
 
 # lift a binary operation.
@@ -21,15 +48,55 @@ proc ? {a op b} {
 	return [list --I $a $op $b]
 }
 
-array set rules {}
+array set _rules {}
 proc rule {name match replace {guards {}}} {
-	global rules
-	if {[info exists rules($name)]} {
+	global _rules
+	if {[info exists _rules($name)]} {
 		fail "rule already defined ($name)"
 	}
-	set rules($name) [list $match $replace $guards]
+	set _rules($name) [list $match $replace $guards]
 }
 
 proc var {v} {
 	return [list --V $v]
+}
+
+# -----------------------------------------------------------------------------
+# Generate saturation code.
+
+proc _gen_sql_def_value {type} {
+	switch -- $type {
+		integer { return 0 }
+		double { return 0.0}
+	}
+	fail "unknown type ($type)"
+}
+proc _gen_sql {} {
+	global _constructors
+	set field_constraint [list "" ""]
+	set field_type [list "integer" "integer" ]
+	set table_field [list "index" "tag"]
+	array set fields_added {}
+	foreach {constr types} [array get _constructors] {
+		set index 1
+		foreach type $types {
+			set field_name ${type}_$index
+			if {![info exists fields_added($field_name)]} {
+				lappend table_field $field_name
+				lappend field_constraint
+			}
+			incr index
+		}
+	}
+}
+
+proc gen {target} {
+	switch -- $target {
+		sql {
+			_gen_sql
+		}
+		* {
+			fail "target unknown ($target)"
+		}
+	}
 }

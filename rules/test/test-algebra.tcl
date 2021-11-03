@@ -1,5 +1,7 @@
 #!/usr/bin/tclsh
 
+source ../equasa.tcl
+
 # some algebra to test.
 
 constr Add a b
