@@ -4,11 +4,11 @@ source ../equasa.tcl
 
 # some algebra to test.
 
-constr Add a b
-constr Negate a
-constr Mul a b
-constr Div a b
-constr Const c
+constr Add Ref Ref
+constr Negate Ref
+constr Mul Ref Ref
+constr Div Ref Ref
+constr Const Double
 
 rule mul_comm [Mul a b] [Mul b a]
 rule add_comm [Add a b] [Add b a]
@@ -33,3 +33,4 @@ rule mul_div_distr [Mul a [Div b c]] [Div [Mul a b] c]
 
 rule div_div [Div a [Div b c]] [Div [Mul a c] b]
 
+puts [gen sql]

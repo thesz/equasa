@@ -7,9 +7,9 @@ proc fail {msg} {
 
 # what types we know?
 array set _known_types {
-	Ref [list "reference to other fact"]
-	Int [list "integer, 64 bit"]
-	Double [list "double precision floating point"]
+	Ref [list "reference to other fact" ]
+	Int [list "integer, 64 bit" ]
+	Double [list "double precision floating point" ]
 }
 proc _known_type {type} {
 	global _known_types
@@ -34,7 +34,7 @@ proc constr {name args} {
 	set vi 1
 	set vars [list ]
 	foreach ty $args {
-		_known_type
+		_known_type $ty
 		lappend vars v$vi
 	}
 	proc $name $vars "return \[list --C $name $vars]"
@@ -71,7 +71,7 @@ proc _gen_sql_def_value {type} {
 	}
 	fail "unknown type ($type)"
 }
-proc _gen_sql {} {
+proc _gen_sql_schema {} {
 	global _constructors
 	set field_constraint [list "" ""]
 	set field_type [list "integer" "integer" ]
@@ -89,11 +89,15 @@ proc _gen_sql {} {
 		}
 	}
 }
+proc _gen_sql {subtarget} {
+	set schema [_gen_sql_schema]
+	return [list schema $schema]
+}
 
-proc gen {target} {
+proc gen {target {subtarget tcl}} {
 	switch -- $target {
 		sql {
-			_gen_sql
+			_gen_sql $subtarget
 		}
 		* {
 			fail "target unknown ($target)"
