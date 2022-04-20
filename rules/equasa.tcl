@@ -84,10 +84,23 @@ proc _gen_sql_schema {} {
 			if {![info exists fields_added($field_name)]} {
 				lappend table_field $field_name
 				lappend field_constraint
+				set fields_added($field_name) ""
 			}
 			incr index
 		}
 	}
+	set create "CREATE TABLE terms\n"
+	set prefix "( "
+	foreach name $table_field type $field_type constr $field_constraint {
+		append create $prefix $name " " $type
+		if {[string length $constr] > 0} {
+			append create " " $constr
+		}
+		append create "\n"
+		set prefix ", "
+	}
+	append create ");\n"
+	return $create
 }
 proc _gen_sql {subtarget} {
 	set schema [_gen_sql_schema]
