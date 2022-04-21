@@ -73,7 +73,7 @@ proc _gen_sql_def_value {type} {
 }
 proc _gen_sql_schema {} {
 	global _constructors
-	set field_constraint [list "" ""]
+	set field_constraint [list "PRIMARY KEY NOT NULL AUTOINCREMENT" "NOT NULL"]
 	set field_type [list "integer" "integer" ]
 	set table_field [list "index" "tag"]
 	array set fields_added {}
@@ -83,13 +83,15 @@ proc _gen_sql_schema {} {
 			set field_name ${type}_$index
 			if {![info exists fields_added($field_name)]} {
 				lappend table_field $field_name
-				lappend field_constraint
+				lappend field_constraint "NOT NULL"
 				set fields_added($field_name) ""
 			}
 			incr index
 		}
 	}
-	set create "CREATE TABLE terms\n"
+
+	set create "-- term storage table."
+	append create "CREATE TABLE terms\n"
 	set prefix "( "
 	foreach name $table_field type $field_type constr $field_constraint {
 		append create $prefix $name " " $type
@@ -99,6 +101,19 @@ proc _gen_sql_schema {} {
 		append create "\n"
 		set prefix ", "
 	}
+	append create ");\n"
+	append create "-- TODO: create indices\n"
+	append create "\n\n"
+	append create "-- keep equality classes when equalitiees are found.\n"
+	append create "CREATE TABLE equality_classes\n"
+	append create "( index INTEGER NOT NULL\n"
+	append create ", equality_class INTEGER NOT NULL\n"
+	append create ");\n"
+	append create "\n\n"
+	append create "-- navigate up expression tree\n"
+	append create "CREATE TABLE referred_by\n"
+	append create "( index INTEGER NOT NULL\n"
+	append create ", referred_by INTEGER NOT NULL\n"
 	append create ");\n"
 	return $create
 }
