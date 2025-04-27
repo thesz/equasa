@@ -10,6 +10,7 @@ array set _known_types {
 	Ref [list "reference to other fact" ]
 	Int [list "integer, 64 bit" ]
 	Double [list "double precision floating point" ]
+	String [list "textual string" ]
 }
 proc _known_type {type} {
 	global _known_types
